@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "car-registration",
+      "description": "A placeholder image for car registration service.",
+      "imageUrl": "https://picsum.photos/seed/1/400/250",
+      "imageHint": "car road"
+    },
+    {
+      "id": "driving-license",
+      "description": "A placeholder image for driving license exchange service.",
+      "imageUrl": "https://picsum.photos/seed/2/400/250",
+      "imageHint": "driving license"
+    },
+    {
+      "id": "document-certification",
+      "description": "A placeholder image for document certification service.",
+      "imageUrl": "https://picsum.photos/seed/3/400/250",
+      "imageHint": "document paper"
+    },
+    {
+      "id": "new-electricity",
+      "description": "A placeholder image for new electricity connection service.",
+      "imageUrl": "https://picsum.photos/seed/4/400/250",
+      "imageHint": "electricity powerline"
+    }
+  ]
 }
