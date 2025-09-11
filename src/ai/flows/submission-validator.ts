@@ -30,7 +30,7 @@ const ValidateSubmissionOutputSchema = z.object({
     .describe('A list of missing required documents, if any. This should be derived from the requiredDocuments input list.'),
   incorrectFileType: z
     .array(z.string())
-    .describe('A list of uploaded document names that have an invalid file type (not PDF, JPG, or PNG).'),
+    .describe('A list of uploaded document names that have an invalid file type (not PDF, JPG, PNG, DOC, or DOCX).'),
 });
 export type ValidateSubmissionOutput = z.infer<typeof ValidateSubmissionOutputSchema>;
 
@@ -59,7 +59,7 @@ const validationPrompt = ai.definePrompt({
     Rules:
     1.  For each required document, check if there is a corresponding uploaded document. The name matching should be flexible (e.g., "Tờ khai" matches "To khai.pdf").
     2.  Identify any required documents that are missing from the uploaded list.
-    3.  Check the file extension of each uploaded document. Only .pdf, .jpg, .jpeg, and .png are allowed.
+    3.  Check the file extension of each uploaded document. Only .pdf, .jpg, .jpeg, .png, .doc, and .docx are allowed.
     4.  List any uploaded documents that have an incorrect file type.
     5.  Set 'isValid' to true only if all required documents are present AND all uploaded files have a valid file type. Otherwise, set it to false.
 

@@ -56,11 +56,11 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
     }
     
     // Check file type on client
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type)) {
       setFileStatuses(prev => ({
         ...prev,
-        [docId]: { file, status: 'invalid', validationMessage: 'Loại tệp không hợp lệ. Chỉ chấp nhận PDF, JPG, PNG.' }
+        [docId]: { file, status: 'invalid', validationMessage: 'Loại tệp không hợp lệ. Chỉ chấp nhận DOC, DOCX, PDF, JPG, PNG.' }
       }));
       return;
     }
@@ -240,7 +240,7 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                                 ref={el => fileInputRefs.current[doc.id] = el}
                                 onChange={(e) => handleFileChange(e, doc.id, doc.name)}
                                 className="flex-grow"
-                                accept=".pdf,.jpg,.jpeg,.png"
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                 disabled={fileStatuses[doc.id]?.status === 'validating'}
                             />
                         </div>
