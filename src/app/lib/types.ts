@@ -14,10 +14,11 @@ export type FeaturedService = {
 export type RequiredDocument = {
   id: string;
   name: string;
+  templateUrl?: string;
 };
 
 export type ProcedureDetail = {
-  id: string;
+  id:string;
   title: string;
   description: string;
   agency: string;

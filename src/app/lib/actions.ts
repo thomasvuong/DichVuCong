@@ -2,6 +2,7 @@
 
 import { refineKeyword } from '@/ai/flows/keyword-refinement';
 import { validateSubmission, ValidateSubmissionInput } from '@/ai/flows/submission-validator';
+import { validateDocumentContent, ValidateDocumentContentInput } from '@/ai/flows/document-content-validator';
 import { mockProcedureDetails, mockSearchResults } from './data';
 import type { Service, ProcedureDetail } from './types';
 
@@ -46,9 +47,9 @@ export async function getProcedureDetails(id: string): Promise<ProcedureDetail |
 }
 
 export async function validateDocuments(input: ValidateSubmissionInput) {
-    // The AI flow is very basic in this starter. 
-    // It only checks if the filenames start with the required doc names.
-    // e.g., required: "Tờ khai", uploaded: "Tờ khai.pdf" -> OK
-    // e.g., required: "Tờ khai", uploaded: "To khai.pdf" -> Fail
     return validateSubmission(input);
+}
+
+export async function validateDocumentContentFlow(input: ValidateDocumentContentInput) {
+    return validateDocumentContent(input);
 }

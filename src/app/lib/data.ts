@@ -44,7 +44,7 @@ export const mockProcedureDetails: ProcedureDetail[] = [
     processingTime: 'Trong ngày',
     fee: 'Miễn phí',
     requiredDocuments: [
-      { id: 'doc1', name: 'Tờ khai đăng ký khai sinh' },
+      { id: 'doc1', name: 'Tờ khai đăng ký khai sinh', templateUrl: 'https://csdl.dichvucong.gov.vn/web/jsp/download_file.jsp?ma=3fd5450fb2670b86' },
       { id: 'doc2', name: 'Giấy chứng sinh' },
       { id: 'doc3', name: 'Giấy đăng ký kết hôn của cha mẹ' },
     ],
