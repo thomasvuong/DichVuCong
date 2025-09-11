@@ -47,7 +47,7 @@ const contentValidationPrompt = ai.definePrompt({
 
     Uploaded File: {{media url=documentDataUri}}
 
-    Analyze the content of the file (it could be an image or a PDF).
+    Analyze the content of the file (it could be an image, a DOC/DOCX, or a PDF).
     - Determine if the content of the file matches the requirement "{{requiredDocumentName}}".
     - Be flexible. For example, if the requirement is "Giấy chứng sinh" (Birth Certificate), the document could be a photo of a birth certificate.
     - If the document seems relevant, set isRelevant to true and provide a brief confirmation reason.
