@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { FileText, User, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { FileText, User, Upload, CheckCircle, AlertCircle, Loader2, XCircle } from 'lucide-react';
 import { mockUserInfo } from '@/app/lib/data';
 import { validateDocuments } from '@/app/lib/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +40,13 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
     setUploadedFiles(prev => ({ ...prev, [docId]: file }));
   };
 
+  const handleRemoveFile = (docId: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docId]: null }));
+    if (fileInputRefs.current[docId]) {
+      fileInputRefs.current[docId]!.value = '';
+    }
+  };
+
   const handleSubmitDocuments = async () => {
     setIsSubmitting(true);
     const uploadedDocumentNames = Object.values(uploadedFiles)
@@ -65,11 +72,9 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
         let description = 'Vui lòng kiểm tra lại hồ sơ.';
         if (validationResult.missingDocuments && validationResult.missingDocuments.length > 0) {
             description = `Thiếu các giấy tờ sau: ${validationResult.missingDocuments.join(', ')}.`;
+        } else if (validationResult.incorrectFileType && validationResult.incorrectFileType.length > 0) {
+          description = `Tệp không hợp lệ: ${validationResult.incorrectFileType.join(', ')}. Chỉ chấp nhận tệp PDF, JPG, PNG.`;
         }
-        // NOTE: The current AI flow doesn't check file types, so this part is for future extension.
-        // else if (validationResult.incorrectFileType && validationResult.incorrectFileType.length > 0) {
-        //   description = `Tệp không hợp lệ: ${validationResult.incorrectFileType.join(', ')}`;
-        // }
         
         toast({
           variant: 'destructive',
@@ -168,18 +173,22 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                             {doc.name}
                         </label>
                         <div className="flex items-center gap-4">
-                            <Input
+                             <Input
                                 id={doc.id}
                                 type="file"
                                 ref={el => fileInputRefs.current[doc.id] = el}
                                 onChange={(e) => handleFileChange(e, doc.id)}
                                 className="flex-grow"
+                                accept=".pdf,.jpg,.jpeg,.png"
                             />
                         </div>
                         {uploadedFiles[doc.id] && (
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-2 p-2 bg-secondary/50 rounded-md">
                                <CheckCircle className="h-4 w-4 text-green-500" />
-                               <span>Đã chọn tệp: {uploadedFiles[doc.id]?.name}</span>
+                               <span className="flex-grow">{uploadedFiles[doc.id]?.name}</span>
+                               <button onClick={() => handleRemoveFile(doc.id)} className="p-1 text-muted-foreground hover:text-destructive">
+                                 <XCircle className="h-4 w-4" />
+                               </button>
                             </div>
                         )}
                     </div>
