@@ -22,6 +22,10 @@ type FileStatus = {
     validationMessage: string | null;
 }
 
+const isImageOrPdf = (file: File) => {
+    return file.type.startsWith('image/') || file.type === 'application/pdf';
+}
+
 export default function ProcedureDetailClient({ procedure }: { procedure: ProcedureDetail }) {
   const [step, setStep] = useState<SubmissionStep>('details');
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
@@ -65,6 +69,15 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
       return;
     }
 
+    // For non-image/pdf files, just accept them without content validation.
+    if (!isImageOrPdf(file)) {
+        setFileStatuses(prev => ({
+            ...prev,
+            [docId]: { file, status: 'valid', validationMessage: 'Tệp hợp lệ. Nội dung không được kiểm tra tự động.' }
+        }));
+        return;
+    }
+
     setFileStatuses(prev => ({
       ...prev,
       [docId]: { file, status: 'validating', validationMessage: 'Đang kiểm tra nội dung...' }
@@ -100,6 +113,12 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                 }));
             }
         };
+        reader.onerror = () => {
+             setFileStatuses(prev => ({
+                ...prev,
+                [docId]: { file, status: 'invalid', validationMessage: 'Lỗi khi đọc tệp.' }
+            }));
+        }
     } catch (error) {
         console.error("Error during content validation:", error);
         setFileStatuses(prev => ({
@@ -244,13 +263,13 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                                 disabled={fileStatuses[doc.id]?.status === 'validating'}
                             />
                         </div>
-                         {fileStatuses[doc.id]?.status !== 'pending' && (
+                         {fileStatuses[doc.id]?.status !== 'pending' && fileStatuses[doc.id]?.file && (
                             <div className="text-sm flex items-center gap-2 mt-2 p-2 bg-secondary/50 rounded-md">
                                 {fileStatuses[doc.id].status === 'validating' && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
                                 {fileStatuses[doc.id].status === 'valid' && <CheckCircle className="h-4 w-4 text-green-500" />}
                                 {fileStatuses[doc.id].status === 'invalid' && <AlertCircle className="h-4 w-4 text-destructive" />}
                                <span className={`flex-grow ${fileStatuses[doc.id].status === 'invalid' ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                 {fileStatuses[doc.id].file?.name}
+                                 {fileStatuses[doc.id].file!.name}
                                </span>
                                {fileStatuses[doc.id].status !== 'validating' && (
                                  <button onClick={() => handleRemoveFile(doc.id)} className="p-1 text-muted-foreground hover:text-destructive">
@@ -349,3 +368,5 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
     </>
   );
 }
+
+    
