@@ -14,6 +14,12 @@ export const mockSearchResults: Service[] = [
     link: '/dich-vu/T-BPC-280422?ma_thu_tuc=T-BPC-280422',
   },
   {
+    id: 'T-BPC-280426',
+    title: 'Đổi Giấy phép lái xe',
+    description: 'Thủ tục đổi Giấy phép lái xe do ngành Giao thông vận tải cấp.',
+    link: '/dich-vu/T-BPC-280422?ma_thu_tuc=T-BPC-280422',
+  },
+  {
     id: 'T-BPC-280423',
     title: 'Đăng ký kết hôn',
     description: 'Thủ tục đăng ký kết hôn giữa công dân Việt Nam.',
