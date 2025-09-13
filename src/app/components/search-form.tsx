@@ -29,6 +29,7 @@ declare global {
 export default function SearchForm({ initialQuery = '' }: { initialQuery?: string }) {
   const [query, setQuery] = useState(initialQuery);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeechRecognitionSupported, setIsSpeechRecognitionSupported] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -36,6 +37,7 @@ export default function SearchForm({ initialQuery = '' }: { initialQuery?: strin
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
+      setIsSpeechRecognitionSupported(true);
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.lang = 'vi-VN';
@@ -62,6 +64,8 @@ export default function SearchForm({ initialQuery = '' }: { initialQuery?: strin
       };
 
       recognitionRef.current = recognition;
+    } else {
+        setIsSpeechRecognitionSupported(false);
     }
   }, [router, toast]);
 
@@ -101,7 +105,7 @@ export default function SearchForm({ initialQuery = '' }: { initialQuery?: strin
           className="w-full h-14 pl-12 pr-24 rounded-full text-base"
         />
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {recognitionRef.current && (
+          {isSpeechRecognitionSupported && (
             <Button
               type="button"
               variant="ghost"
