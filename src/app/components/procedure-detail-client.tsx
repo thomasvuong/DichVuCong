@@ -33,10 +33,9 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   
   const initialFileStatuses = procedure.requiredDocuments.reduce((acc, doc) => {
-      const isOnlineForm = doc.onlineForm && doc.onlineForm.length > 0;
       return {
           ...acc,
-          [doc.id]: { file: null, status: isOnlineForm ? 'valid' : 'pending', validationMessage: isOnlineForm ? 'Sẽ được khai báo trực tuyến.' : null }
+          [doc.id]: { file: null, status: 'pending', validationMessage: null }
       }
   }, {} as Record<string, FileStatus>);
   
@@ -137,10 +136,7 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
   };
 
   const handleRemoveFile = (docId: string) => {
-    const docConfig = procedure.requiredDocuments.find(d => d.id === docId);
-    const isOnlineForm = docConfig?.onlineForm && docConfig.onlineForm.length > 0;
-    
-    setFileStatuses(prev => ({ ...prev, [docId]: { file: null, status: isOnlineForm ? 'valid' : 'pending', validationMessage: isOnlineForm ? 'Sẽ được khai báo trực tuyến.' : null } }));
+    setFileStatuses(prev => ({ ...prev, [docId]: { file: null, status: 'pending', validationMessage: null } }));
     
     if (fileInputRefs.current[docId]) {
       fileInputRefs.current[docId]!.value = '';
@@ -296,7 +292,7 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                 <h3 className="font-semibold text-lg">Giấy tờ cần nộp</h3>
                 {procedure.requiredDocuments.map((doc) => {
                     const hasOnlineForm = doc.onlineForm && doc.onlineForm.length > 0;
-                    const isOnlineFormSubmitted = hasOnlineForm && fileStatuses[doc.id]?.validationMessage?.includes('khai báo trực tuyến');
+                    const isOnlineFormFilled = fileStatuses[doc.id]?.status === 'valid' && !fileStatuses[doc.id]?.file;
 
                     return (
                         <div key={doc.id} className="p-4 border rounded-lg space-y-3">
@@ -315,7 +311,7 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                                 )}
                             </div>
 
-                            {!isOnlineFormSubmitted && (
+                            {!isOnlineFormFilled && (
                                 <div className="grid sm:grid-cols-2 gap-4">
                                      {hasOnlineForm && (
                                         <Button variant="outline" onClick={() => setCurrentOnlineFormDocId(doc.id)}>
