@@ -13,6 +13,8 @@ import { Camera, Loader2, Upload } from 'lucide-react';
 import { extractFormData as extractFormDataAction } from '@/app/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import Image from 'next/image';
 
 const createZodSchema = (fields: FormFieldConfig[]) => {
   const schema: Record<string, z.ZodType<any, any>> = {};
@@ -61,6 +63,7 @@ export default function OnlineForm({
   const formSchema = createZodSchema(fields);
   const { toast } = useToast();
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   
   const methods = useForm({
     resolver: zodResolver(formSchema),
@@ -77,19 +80,7 @@ export default function OnlineForm({
 
   const { handleSubmit, reset } = methods;
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-        toast({
-            variant: 'destructive',
-            title: 'Tệp không hợp lệ',
-            description: 'Vui lòng chỉ tải lên tệp hình ảnh.',
-        });
-        return;
-    }
-
+  const processFileForExtraction = async (file: File | Blob, fileType: string) => {
     setIsExtracting(true);
     toast({
         title: 'Đang trích xuất thông tin...',
@@ -127,7 +118,40 @@ export default function OnlineForm({
     }
   }
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        toast({
+            variant: 'destructive',
+            title: 'Tệp không hợp lệ',
+            description: 'Vui lòng chỉ tải lên tệp hình ảnh.',
+        });
+        return;
+    }
+    processFileForExtraction(file, file.type);
+  }
+
+  const handleUseDemoDocument = async () => {
+    setDemoModalOpen(false);
+    try {
+        const response = await fetch('/mock-birth-certificate.jpg');
+        const blob = await response.blob();
+        processFileForExtraction(blob, blob.type);
+    } catch (error) {
+        console.error('Failed to fetch demo document', error);
+        toast({
+            variant: 'destructive',
+            title: 'Lỗi tải tài liệu demo',
+            description: 'Không thể tải được tệp ảnh mẫu.',
+        })
+    }
+  }
+
+
   return (
+    <>
     <Card className="w-full">
         <CardHeader>
             <CardTitle>Khai báo trực tuyến</CardTitle>
@@ -145,6 +169,11 @@ export default function OnlineForm({
                     </Alert>
                 </Label>
                 <Input id="photo-upload" type="file" className="sr-only" accept="image/*" onChange={handlePhotoUpload} disabled={isExtracting}/>
+                <div className="text-center mt-2">
+                    <Button variant="link" size="sm" onClick={() => setDemoModalOpen(true)}>
+                        Hoặc sử dụng tài liệu demo
+                    </Button>
+                </div>
             </div>
             {isExtracting && (
                 <div className="flex items-center justify-center gap-2 text-muted-foreground my-4">
@@ -165,5 +194,28 @@ export default function OnlineForm({
             </FormProvider>
         </CardContent>
     </Card>
+    <Dialog open={isDemoModalOpen} onOpenChange={setDemoModalOpen}>
+        <DialogContent className="max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Tài liệu demo: Giấy khai sinh</DialogTitle>
+                <DialogDescription>
+                    Đây là một ảnh mẫu để trình diễn tính năng trích xuất thông tin tự động bằng AI.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 relative aspect-[_7/10_]">
+                <Image 
+                    src="/mock-birth-certificate.jpg" 
+                    alt="Mock birth certificate" 
+                    fill
+                    className="object-contain rounded-md"
+                />
+            </div>
+            <Button onClick={handleUseDemoDocument} disabled={isExtracting}>
+                {isExtracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                Sử dụng ảnh này để điền tự động
+            </Button>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
