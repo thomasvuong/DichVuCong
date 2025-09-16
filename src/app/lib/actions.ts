@@ -3,6 +3,7 @@
 import { refineKeyword } from '@/ai/flows/keyword-refinement';
 import { validateSubmission, ValidateSubmissionInput } from '@/ai/flows/submission-validator';
 import { validateDocumentContent, ValidateDocumentContentInput } from '@/ai/flows/document-content-validator';
+import { extractFormData, ExtractFormDataInput } from '@/ai/flows/extract-form-data';
 import { mockProcedureDetails, mockSearchResults } from './data';
 import type { Service, ProcedureDetail } from './types';
 
@@ -52,4 +53,8 @@ export async function validateDocuments(input: ValidateSubmissionInput) {
 
 export async function validateDocumentContentFlow(input: ValidateDocumentContentInput) {
     return validateDocumentContent(input);
+}
+
+export async function extractFormData(input: ExtractFormDataInput) {
+    return extractFormData(input);
 }

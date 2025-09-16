@@ -1,41 +1,63 @@
-import { ProcedureDetail, Service } from './types';
+import { ProcedureDetail, Service, FormFieldConfig } from './types';
+
+const birthCertificateFormFields: FormFieldConfig[] = [
+  { id: 'ho_ten_nguoi_yeu_cau', label: 'Họ tên người yêu cầu', placeholder: 'Nguyễn Văn A', group: 'Thông tin người yêu cầu' },
+  { id: 'dia_chi_nguoi_yeu_cau', label: 'Địa chỉ người yêu cầu', placeholder: 'Số 1, Đường ABC, Hà Nội', group: 'Thông tin người yêu cầu' },
+  { id: 'sdt_nguoi_yeu_cau', label: 'Số điện thoại', placeholder: '09xxxxxxxx', group: 'Thông tin người yêu cầu' },
+  { id: 'ho_ten_nguoi_duoc_khai_sinh', label: 'Họ và tên người được khai sinh', placeholder: 'Nguyễn Thị B', group: 'Thông tin người được khai sinh' },
+  { id: 'ngay_sinh', label: 'Ngày sinh', placeholder: 'dd/mm/yyyy', group: 'Thông tin người được khai sinh' },
+  { id: 'gioi_tinh', label: 'Giới tính', placeholder: 'Nữ', group: 'Thông tin người được khai sinh' },
+  { id: 'dan_toc', label: 'Dân tộc', placeholder: 'Kinh', group: 'Thông tin người được khai sinh' },
+  { id: 'quoc_tich', label: 'Quốc tịch', placeholder: 'Việt Nam', group: 'Thông tin người được khai sinh' },
+  { id: 'noi_sinh', label: 'Nơi sinh', placeholder: 'Bệnh viện Phụ sản Hà Nội', group: 'Thông tin người được khai sinh' },
+  { id: 'que_quan', label: 'Quê quán', placeholder: 'Hà Nội', group: 'Thông tin người được khai sinh' },
+  { id: 'ho_ten_cha', label: 'Họ và tên cha', placeholder: 'Nguyễn Văn C', group: 'Thông tin cha' },
+  { id: 'dan_toc_cha', label: 'Dân tộc của cha', placeholder: 'Kinh', group: 'Thông tin cha' },
+  { id: 'quoc_tich_cha', label: 'Quốc tịch của cha', placeholder: 'Việt Nam', group: 'Thông tin cha' },
+  { id: 'noi_cu_tru_cha', label: 'Nơi cư trú của cha', placeholder: 'Số 1, Đường ABC, Hà Nội', group: 'Thông tin cha' },
+  { id: 'ho_ten_me', label: 'Họ và tên mẹ', placeholder: 'Trần Thị D', group: 'Thông tin mẹ' },
+  { id: 'dan_toc_me', label: 'Dân tộc của mẹ', placeholder: 'Kinh', group: 'Thông tin mẹ' },
+  { id: 'quoc_tich_me', label: 'Quốc tịch của mẹ', placeholder: 'Việt Nam', group: 'Thông tin mẹ' },
+  { id: 'noi_cu_tru_me', label: 'Nơi cư trú của mẹ', placeholder: 'Số 1, Đường ABC, Hà Nội', group: 'Thông tin mẹ' },
+];
+
 
 export const mockSearchResults: Service[] = [
   {
     id: 'T-BPC-280421',
     title: 'Thủ tục cấp giấy khai sinh',
     description: 'Thủ tục đăng ký khai sinh cho trẻ em Việt Nam.',
-    link: '/dich-vu/T-BPC-280421?ma_thu_tuc=T-BPC-280421',
+    link: '/dich-vu/T-BPC-280421',
   },
   {
     id: 'T-BPC-280422',
     title: 'Cấp lại Giấy phép lái xe',
     description: 'Thủ tục cấp lại giấy phép lái xe bị mất hoặc hỏng.',
-    link: '/dich-vu/T-BPC-280422?ma_thu_tuc=T-BPC-280422',
+    link: '/dich-vu/T-BPC-280422',
   },
   {
     id: 'T-BPC-280426',
     title: 'Đổi Giấy phép lái xe',
     description: 'Thủ tục đổi Giấy phép lái xe do ngành Giao thông vận tải cấp.',
-    link: '/dich-vu/T-BPC-280426?ma_thu_tuc=T-BPC-280426',
+    link: '/dich-vu/T-BPC-280426',
   },
   {
     id: 'T-BPC-280423',
     title: 'Đăng ký kết hôn',
     description: 'Thủ tục đăng ký kết hôn giữa công dân Việt Nam.',
-    link: '/dich-vu/T-BPC-280423?ma_thu_tuc=T-BPC-280423',
+    link: '/dich-vu/T-BPC-280423',
   },
   {
     id: 'T-BPC-280424',
     title: 'Cấp thẻ Căn cước công dân',
     description: 'Thủ tục cấp mới, cấp đổi, cấp lại thẻ Căn cước công dân.',
-    link: '/dich-vu/T-BPC-280424?ma_thu_tuc=T-BPC-280424',
+    link: '/dich-vu/T-BPC-280424',
   },
   {
     id: 'T-BPC-280425',
     title: 'Thủ tục đăng ký, cấp biển số xe',
     description: 'Thủ tục đăng ký xe và cấp biển số xe cơ giới.',
-    link: '/dich-vu/T-BPC-280425?ma_thu_tuc=T-BPC-280425',
+    link: '/dich-vu/T-BPC-280425',
   },
 ];
 
@@ -50,7 +72,7 @@ export const mockProcedureDetails: ProcedureDetail[] = [
     processingTime: 'Trong ngày',
     fee: 'Miễn phí',
     requiredDocuments: [
-      { id: 'doc1', name: 'Tờ khai đăng ký khai sinh', templateUrl: 'https://csdl.dichvucong.gov.vn/web/jsp/download_file.jsp?ma=3fd5450fb2670b86' },
+      { id: 'doc1', name: 'Tờ khai đăng ký khai sinh', templateUrl: 'https://csdl.dichvucong.gov.vn/web/jsp/download_file.jsp?ma=3fd5450fb2670b86', onlineForm: birthCertificateFormFields },
       { id: 'doc2', name: 'Giấy chứng sinh' },
       { id: 'doc3', name: 'Giấy đăng ký kết hôn của cha mẹ' },
     ],

@@ -11,10 +11,18 @@ export type FeaturedService = {
   href: string;
 };
 
+export type FormFieldConfig = {
+  id: string;
+  label: string;
+  placeholder: string;
+  group: string;
+};
+
 export type RequiredDocument = {
   id: string;
   name: string;
   templateUrl?: string;
+  onlineForm?: FormFieldConfig[];
 };
 
 export type ProcedureDetail = {

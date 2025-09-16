@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { FileText, User, Upload, CheckCircle, AlertCircle, Loader2, XCircle, Download, CircleDashed } from 'lucide-react';
+import { FileText, User, Upload, CheckCircle, AlertCircle, Loader2, XCircle, Download, FileUp, Edit } from 'lucide-react';
 import { mockUserInfo } from '@/app/lib/data';
-import { validateDocuments, validateDocumentContentFlow } from '@/app/lib/actions';
+import { validateDocumentContentFlow } from '@/app/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import OnlineForm from './online-form';
 
 type SubmissionStep = 'details' | 'upload' | 'confirm';
 
@@ -30,14 +31,22 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
   const [step, setStep] = useState<SubmissionStep>('details');
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [fileStatuses, setFileStatuses] = useState<Record<string, FileStatus>>(
-    procedure.requiredDocuments.reduce((acc, doc) => ({
-      ...acc,
-      [doc.id]: { file: null, status: 'pending', validationMessage: null }
-    }), {})
-  );
+  
+  const initialFileStatuses = procedure.requiredDocuments.reduce((acc, doc) => {
+      const isOnlineForm = doc.onlineForm && doc.onlineForm.length > 0;
+      return {
+          ...acc,
+          [doc.id]: { file: null, status: isOnlineForm ? 'valid' : 'pending', validationMessage: isOnlineForm ? 'Sẽ được khai báo trực tuyến.' : null }
+      }
+  }, {} as Record<string, FileStatus>);
+  
+  const [fileStatuses, setFileStatuses] = useState<Record<string, FileStatus>>(initialFileStatuses);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionRef, setSubmissionRef] = useState<string | null>(null);
+  const [onlineFormData, setOnlineFormData] = useState<Record<string, any> | null>(null);
+  const [currentOnlineFormDocId, setCurrentOnlineFormDocId] = useState<string | null>(null);
+  
   const { toast } = useToast();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -69,7 +78,6 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
       return;
     }
 
-    // For non-image/pdf files, just accept them without content validation.
     if (!isImageOrPdf(file)) {
         setFileStatuses(prev => ({
             ...prev,
@@ -129,14 +137,32 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
   };
 
   const handleRemoveFile = (docId: string) => {
-    setFileStatuses(prev => ({ ...prev, [docId]: { file: null, status: 'pending', validationMessage: null } }));
+    const docConfig = procedure.requiredDocuments.find(d => d.id === docId);
+    const isOnlineForm = docConfig?.onlineForm && docConfig.onlineForm.length > 0;
+    
+    setFileStatuses(prev => ({ ...prev, [docId]: { file: null, status: isOnlineForm ? 'valid' : 'pending', validationMessage: isOnlineForm ? 'Sẽ được khai báo trực tuyến.' : null } }));
+    
     if (fileInputRefs.current[docId]) {
       fileInputRefs.current[docId]!.value = '';
     }
+    if (onlineFormData && docId === currentOnlineFormDocId) {
+        setOnlineFormData(null);
+        setCurrentOnlineFormDocId(null);
+    }
+  };
+
+  const handleOnlineFormSubmit = (data: any) => {
+    if (!currentOnlineFormDocId) return;
+
+    setOnlineFormData(data);
+    setFileStatuses(prev => ({
+        ...prev,
+        [currentOnlineFormDocId]: { file: null, status: 'valid', validationMessage: 'Đã khai báo trực tuyến thành công.' }
+    }));
+    setCurrentOnlineFormDocId(null); // Close the form view
   };
 
   const handleSubmitDocuments = async () => {
-    // Check if all required documents have been uploaded and are valid
     const missingDocs = Object.entries(fileStatuses)
         .filter(([_, status]) => status.status !== 'valid')
         .map(([docId, _]) => procedure.requiredDocuments.find(d => d.id === docId)?.name)
@@ -146,13 +172,12 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
         toast({
             variant: 'destructive',
             title: 'Hồ sơ chưa hoàn tất',
-            description: `Vui lòng tải lên và xác thực các giấy tờ sau: ${missingDocs.join(', ')}.`,
+            description: `Vui lòng tải lên hoặc hoàn tất khai báo cho các giấy tờ sau: ${missingDocs.join(', ')}.`,
         });
         return;
     }
     
     setIsSubmitting(true);
-    // Simulate final submission process
     await new Promise(res => setTimeout(res, 1000));
     setSubmissionRef(`DVC-${Date.now()}`);
     setStep('confirm');
@@ -162,6 +187,15 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
     });
     setIsSubmitting(false);
   };
+  
+  const getDocDisplayName = (docId: string): string => {
+      const doc = procedure.requiredDocuments.find(d => d.id === docId);
+      if (doc?.onlineForm && onlineFormData && doc.id === Object.keys(onlineFormData)[0]) {
+          return `Tờ khai trực tuyến: ${doc.name}`;
+      }
+      const file = fileStatuses[docId]?.file;
+      return file ? file.name : `Tờ khai ${doc?.name}`;
+  }
 
   const renderDetailItem = (label: string, value: string) => (
     <div className="grid grid-cols-3 gap-4">
@@ -169,6 +203,24 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
       <dd className="col-span-2 font-medium">{value}</dd>
     </div>
   );
+
+  const docWithOnlineForm = currentOnlineFormDocId ? procedure.requiredDocuments.find(d => d.id === currentOnlineFormDocId) : null;
+  if (docWithOnlineForm && docWithOnlineForm.onlineForm) {
+      return (
+          <div className="w-full max-w-4xl mx-auto">
+              <Button variant="outline" onClick={() => setCurrentOnlineFormDocId(null)} className="mb-4">
+                &larr; Quay lại danh sách giấy tờ
+              </Button>
+              <OnlineForm
+                  fields={docWithOnlineForm.onlineForm}
+                  userInfo={userInfo}
+                  onFormSubmit={handleOnlineFormSubmit}
+                  isSubmitting={isSubmitting}
+              />
+          </div>
+      )
+  }
+
 
   if (step === 'confirm' && submissionRef) {
     return (
@@ -199,11 +251,17 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Giấy tờ đã nộp</h3>
                      <ul className="space-y-2">
-                        {Object.values(fileStatuses).filter(f => f.file).map((status, i) => (
+                        {Object.entries(fileStatuses).filter(([_, s]) => s.status === 'valid').map(([docId, status], i) => (
                             <li key={i} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-md text-sm">
                                 <FileText className="h-4 w-4 text-muted-foreground"/>
-                                <span>{status.file!.name}</span>
-                                <Badge variant="secondary" className="ml-auto">{(status.file!.size / 1024).toFixed(2)} KB</Badge>
+                                {status.file ? (
+                                    <>
+                                        <span>{status.file!.name}</span>
+                                        <Badge variant="secondary" className="ml-auto">{(status.file!.size / 1024).toFixed(2)} KB</Badge>
+                                    </>
+                                ) : (
+                                    <span>{procedure.requiredDocuments.find(d => d.id === docId)?.name} (Đã nộp trực tuyến)</span>
+                                )}
                             </li>
                         ))}
                     </ul>
@@ -220,7 +278,7 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
         <Card className="w-full max-w-3xl mx-auto">
             <CardHeader>
                 <CardTitle>Nộp hồ sơ cho: {procedure.title}</CardTitle>
-                <CardDescription>Vui lòng tải lên các giấy tờ được yêu cầu bên dưới. Hệ thống sẽ dùng AI để kiểm tra nội dung tệp.</CardDescription>
+                <CardDescription>Vui lòng tải lên hoặc khai báo các giấy tờ được yêu cầu bên dưới. Hệ thống sẽ dùng AI để kiểm tra nội dung tệp.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                  {userInfo && (
@@ -236,58 +294,81 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
                  )}
                 <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Giấy tờ cần nộp</h3>
-                {procedure.requiredDocuments.map((doc) => (
-                    <div key={doc.id} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex justify-between items-start">
-                             <label htmlFor={doc.id} className="font-medium flex items-center gap-2">
-                                <FileText className="h-5 w-5 text-primary" />
-                                {doc.name}
-                            </label>
-                            {doc.templateUrl && (
-                                <Link href={doc.templateUrl} target="_blank" rel="noopener noreferrer">
-                                    <Button variant="link" size="sm" className="h-auto p-0">
-                                        <Download className="mr-1 h-4 w-4" />
-                                        Mẫu đơn
-                                    </Button>
-                                </Link>
+                {procedure.requiredDocuments.map((doc) => {
+                    const hasOnlineForm = doc.onlineForm && doc.onlineForm.length > 0;
+                    const isOnlineFormSubmitted = hasOnlineForm && fileStatuses[doc.id]?.validationMessage?.includes('khai báo trực tuyến');
+
+                    return (
+                        <div key={doc.id} className="p-4 border rounded-lg space-y-3">
+                            <div className="flex justify-between items-start">
+                                <label htmlFor={doc.id} className="font-medium flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-primary" />
+                                    {doc.name}
+                                </label>
+                                {doc.templateUrl && (
+                                    <Link href={doc.templateUrl} target="_blank" rel="noopener noreferrer">
+                                        <Button variant="link" size="sm" className="h-auto p-0">
+                                            <Download className="mr-1 h-4 w-4" />
+                                            Mẫu đơn
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+
+                            {!isOnlineFormSubmitted && (
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                     {hasOnlineForm && (
+                                        <Button variant="outline" onClick={() => setCurrentOnlineFormDocId(doc.id)}>
+                                            <Edit className="mr-2 h-4 w-4"/>
+                                            Khai báo trực tuyến
+                                        </Button>
+                                    )}
+                                    <div className={`relative ${hasOnlineForm ? '' : 'sm:col-span-2'}`}>
+                                        <Button asChild variant="outline" className="w-full">
+                                            <label htmlFor={doc.id} className="cursor-pointer">
+                                                <FileUp className="mr-2 h-4 w-4" />
+                                                Tải tệp lên
+                                            </label>
+                                        </Button>
+                                        <Input
+                                            id={doc.id}
+                                            type="file"
+                                            ref={el => fileInputRefs.current[doc.id] = el}
+                                            onChange={(e) => handleFileChange(e, doc.id, doc.name)}
+                                            className="sr-only"
+                                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                            disabled={fileStatuses[doc.id]?.status === 'validating'}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                             {fileStatuses[doc.id]?.status !== 'pending' && (
+                                <div className="text-sm flex items-center gap-2 mt-2 p-2 bg-secondary/50 rounded-md">
+                                    {fileStatuses[doc.id].status === 'validating' && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
+                                    {fileStatuses[doc.id].status === 'valid' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                    {fileStatuses[doc.id].status === 'invalid' && <AlertCircle className="h-4 w-4 text-destructive" />}
+                                    <span className={`flex-grow truncate ${fileStatuses[doc.id].status === 'invalid' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                        {fileStatuses[doc.id].file ? fileStatuses[doc.id].file!.name : 'Đã khai báo trực tuyến'}
+                                    </span>
+                                   {fileStatuses[doc.id].status !== 'validating' && (
+                                     <button onClick={() => handleRemoveFile(doc.id)} className="p-1 text-muted-foreground hover:text-destructive">
+                                         <XCircle className="h-4 w-4" />
+                                     </button>
+                                   )}
+                                </div>
+                            )}
+                            {fileStatuses[doc.id]?.validationMessage && (
+                                <p className={`text-xs ${
+                                    fileStatuses[doc.id].status === 'valid' ? 'text-green-600' :
+                                    fileStatuses[doc.id].status === 'invalid' ? 'text-destructive' : 'text-muted-foreground'
+                                }`}>
+                                    {fileStatuses[doc.id].validationMessage}
+                                </p>
                             )}
                         </div>
-                        <div className="flex items-center gap-4">
-                             <Input
-                                id={doc.id}
-                                type="file"
-                                ref={el => fileInputRefs.current[doc.id] = el}
-                                onChange={(e) => handleFileChange(e, doc.id, doc.name)}
-                                className="flex-grow"
-                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                disabled={fileStatuses[doc.id]?.status === 'validating'}
-                            />
-                        </div>
-                         {fileStatuses[doc.id]?.status !== 'pending' && fileStatuses[doc.id]?.file && (
-                            <div className="text-sm flex items-center gap-2 mt-2 p-2 bg-secondary/50 rounded-md">
-                                {fileStatuses[doc.id].status === 'validating' && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
-                                {fileStatuses[doc.id].status === 'valid' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                                {fileStatuses[doc.id].status === 'invalid' && <AlertCircle className="h-4 w-4 text-destructive" />}
-                               <span className={`flex-grow ${fileStatuses[doc.id].status === 'invalid' ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                 {fileStatuses[doc.id].file!.name}
-                               </span>
-                               {fileStatuses[doc.id].status !== 'validating' && (
-                                 <button onClick={() => handleRemoveFile(doc.id)} className="p-1 text-muted-foreground hover:text-destructive">
-                                     <XCircle className="h-4 w-4" />
-                                 </button>
-                               )}
-                            </div>
-                        )}
-                        {fileStatuses[doc.id]?.validationMessage && (
-                            <p className={`text-xs ${
-                                fileStatuses[doc.id].status === 'valid' ? 'text-green-600' :
-                                fileStatuses[doc.id].status === 'invalid' ? 'text-destructive' : 'text-muted-foreground'
-                            }`}>
-                                {fileStatuses[doc.id].validationMessage}
-                            </p>
-                        )}
-                    </div>
-                ))}
+                    )
+                })}
                 </div>
                 <Button onClick={handleSubmitDocuments} disabled={isSubmitting || !allFilesValid} className="w-full">
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4"/>}
@@ -368,5 +449,3 @@ export default function ProcedureDetailClient({ procedure }: { procedure: Proced
     </>
   );
 }
-
-    
