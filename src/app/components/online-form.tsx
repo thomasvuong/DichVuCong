@@ -193,25 +193,29 @@ export default function OnlineForm({
         </CardContent>
     </Card>
     <Dialog open={isDemoModalOpen} onOpenChange={setDemoModalOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
             <DialogHeader>
                 <DialogTitle>Tài liệu demo: Giấy khai sinh</DialogTitle>
                 <DialogDescription>
                     Đây là một ảnh mẫu để trình diễn tính năng trích xuất thông tin tự động bằng AI.
                 </DialogDescription>
             </DialogHeader>
-            <div className="py-4 relative aspect-[_7/10_]">
-                <Image 
-                    src={demoImageUrl}
-                    alt="Mock birth certificate" 
-                    fill
-                    className="object-contain rounded-md"
-                />
+            <div className="flex-grow relative overflow-y-auto -mx-6 px-6">
+                <div className="relative aspect-[_7/10_] min-h-[500px]">
+                    <Image 
+                        src={demoImageUrl}
+                        alt="Mock birth certificate" 
+                        fill
+                        className="object-contain rounded-md"
+                    />
+                </div>
             </div>
-            <Button onClick={handleUseDemoDocument} disabled={isExtracting}>
-                {isExtracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
-                Sử dụng ảnh này để điền tự động
-            </Button>
+            <div className="flex-shrink-0 pt-4">
+                <Button onClick={handleUseDemoDocument} disabled={isExtracting} className="w-full">
+                    {isExtracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                    Sử dụng ảnh này để điền tự động
+                </Button>
+            </div>
         </DialogContent>
     </Dialog>
     </>
