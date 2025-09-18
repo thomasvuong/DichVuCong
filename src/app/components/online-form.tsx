@@ -89,18 +89,11 @@ export default function OnlineForm({
     });
 
     try {
-        let dataUri = '';
+        let photoDataUri = '';
         if (typeof fileOrUrl === 'string') {
-            const response = await fetch(fileOrUrl);
-            const blob = await response.blob();
-            dataUri = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
+            photoDataUri = fileOrUrl;
         } else {
-            dataUri = await new Promise((resolve, reject) => {
+            photoDataUri = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result as string);
                 reader.onerror = reject;
@@ -108,7 +101,7 @@ export default function OnlineForm({
             });
         }
 
-        const result = await extractFormDataAction({ photoDataUri: dataUri });
+        const result = await extractFormDataAction({ photoDataUri });
         reset(result.formData);
         toast({
             title: 'Trích xuất thành công!',
