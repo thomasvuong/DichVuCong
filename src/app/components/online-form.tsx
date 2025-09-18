@@ -79,7 +79,7 @@ export default function OnlineForm({
     }, {} as Record<string, string>),
   });
 
-  const { handleSubmit, reset } = methods;
+  const { handleSubmit, setValue, getValues } = methods;
 
   const processFileForExtraction = async (fileOrUrl: File | string) => {
     setIsExtracting(true);
@@ -89,7 +89,7 @@ export default function OnlineForm({
     });
 
     try {
-        let photoDataUri = '';
+        let photoDataUri: string;
         if (typeof fileOrUrl === 'string') {
             photoDataUri = fileOrUrl;
         } else {
@@ -102,7 +102,19 @@ export default function OnlineForm({
         }
 
         const result = await extractFormDataAction({ photoDataUri });
-        reset(result.formData);
+        
+        // Merge OCR data with existing data
+        const currentValues = getValues();
+        const newValues = result.formData;
+
+        Object.keys(newValues).forEach(key => {
+            const typedKey = key as keyof typeof newValues;
+            // Only set value if OCR found something, otherwise keep pre-filled data
+            if (newValues[typedKey]) {
+                 setValue(typedKey, newValues[typedKey], { shouldValidate: true });
+            }
+        });
+
         toast({
             title: 'Trích xuất thành công!',
             description: 'Dữ liệu đã được điền vào biểu mẫu.',
