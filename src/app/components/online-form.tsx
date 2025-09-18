@@ -136,7 +136,7 @@ export default function OnlineForm({
   const handleUseDemoDocument = async () => {
     setDemoModalOpen(false);
     try {
-        const response = await fetch('/mock-birth-certificate.jpg');
+        const response = await fetch('https://picsum.photos/seed/5/800/1131');
         const blob = await response.blob();
         processFileForExtraction(blob, blob.type);
     } catch (error) {
@@ -204,7 +204,7 @@ export default function OnlineForm({
             </DialogHeader>
             <div className="py-4 relative aspect-[_7/10_]">
                 <Image 
-                    src="/mock-birth-certificate.jpg" 
+                    src="https://picsum.photos/seed/5/800/1131"
                     alt="Mock birth certificate" 
                     fill
                     className="object-contain rounded-md"
