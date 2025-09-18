@@ -42,4 +42,5 @@ export type UserInfo = {
   idNumber: string;
   dateOfBirth: string;
   address: string;
+  phoneNumber: string;
 };

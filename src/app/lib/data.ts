@@ -1,4 +1,4 @@
-import { ProcedureDetail, Service, FormFieldConfig } from './types';
+import { ProcedureDetail, Service, FormFieldConfig, UserInfo } from './types';
 
 const birthCertificateFormFields: FormFieldConfig[] = [
   { id: 'ho_ten_nguoi_yeu_cau', label: 'Họ tên người yêu cầu', placeholder: 'Nguyễn Văn A', group: 'Thông tin người yêu cầu' },
@@ -155,9 +155,10 @@ export const mockProcedureDetails: ProcedureDetail[] = [
   },
 ];
 
-export const mockUserInfo = {
+export const mockUserInfo: UserInfo = {
   fullName: 'Nguyễn Văn A',
   idNumber: '012345678910',
   dateOfBirth: '01/01/1990',
   address: 'Số 1, Đường ABC, Phường XYZ, Quận Ba Đình, Hà Nội',
+  phoneNumber: '0987654321',
 };

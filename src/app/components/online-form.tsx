@@ -73,6 +73,7 @@ export default function OnlineForm({
         if (userInfo) {
             if (field.id === 'ho_ten_nguoi_yeu_cau') value = userInfo.fullName;
             if (field.id === 'dia_chi_nguoi_yeu_cau') value = userInfo.address;
+            if (field.id === 'sdt_nguoi_yeu_cau') value = userInfo.phoneNumber;
         }
         acc[field.id] = value;
         return acc;
@@ -103,8 +104,6 @@ export default function OnlineForm({
 
         const result = await extractFormDataAction({ photoDataUri });
         
-        // Merge OCR data with existing data
-        const currentValues = getValues();
         const newValues = result.formData;
 
         Object.keys(newValues).forEach(key => {
