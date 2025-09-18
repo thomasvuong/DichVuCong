@@ -91,7 +91,10 @@ export default function OnlineForm({
     try {
         let dataUri = '';
         if (typeof fileOrUrl === 'string') {
-            const response = await fetch(fileOrUrl);
+             // To get around CORS issues when fetching from a URL, we can use a server-side proxy
+             // but for this demo, we'll assume direct fetching works or a proxy is set up.
+             // A more robust solution might involve a dedicated API endpoint to fetch the image.
+            const response = await fetch(fileOrUrl.replace("dl=0", "raw=1"));
             const blob = await response.blob();
             dataUri = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
