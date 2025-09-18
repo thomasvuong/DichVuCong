@@ -64,6 +64,7 @@ export default function OnlineForm({
   const { toast } = useToast();
   const [isExtracting, setIsExtracting] = useState(false);
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
+  const demoImageUrl = "https://www.dropbox.com/scl/fi/djr5uk00yly5pvc97818a/Birth-Cert-Original.jpg?rlkey=fopchhvk88a6w2ea21adcx6c0&raw=1";
   
   const methods = useForm({
     resolver: zodResolver(formSchema),
@@ -80,7 +81,7 @@ export default function OnlineForm({
 
   const { handleSubmit, reset } = methods;
 
-  const processFileForExtraction = async (file: File | Blob, fileType: string) => {
+  const processFileForExtraction = async (fileOrUrl: File | string) => {
     setIsExtracting(true);
     toast({
         title: 'Đang trích xuất thông tin...',
@@ -88,24 +89,32 @@ export default function OnlineForm({
     });
 
     try {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async (event) => {
-            const dataUri = event.target?.result as string;
-            const result = await extractFormDataAction({ photoDataUri: dataUri });
-            reset(result.formData);
-            toast({
-                title: 'Trích xuất thành công!',
-                description: 'Dữ liệu đã được điền vào biểu mẫu.',
+        let dataUri = '';
+        if (typeof fileOrUrl === 'string') {
+            const response = await fetch(fileOrUrl);
+            const blob = await response.blob();
+            dataUri = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
             });
-        };
-        reader.onerror = () => {
-             toast({
-                variant: 'destructive',
-                title: 'Lỗi đọc tệp',
-                description: 'Không thể đọc tệp hình ảnh.',
+        } else {
+            dataUri = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(fileOrUrl);
             });
         }
+
+        const result = await extractFormDataAction({ photoDataUri: dataUri });
+        reset(result.formData);
+        toast({
+            title: 'Trích xuất thành công!',
+            description: 'Dữ liệu đã được điền vào biểu mẫu.',
+        });
+
     } catch(error) {
         console.error('Extraction failed', error);
         toast({
@@ -130,23 +139,12 @@ export default function OnlineForm({
         });
         return;
     }
-    processFileForExtraction(file, file.type);
+    processFileForExtraction(file);
   }
 
   const handleUseDemoDocument = async () => {
     setDemoModalOpen(false);
-    try {
-        const response = await fetch('/mock-birth-certificate.jpg');
-        const blob = await response.blob();
-        processFileForExtraction(blob, blob.type);
-    } catch (error) {
-        console.error('Failed to fetch demo document', error);
-        toast({
-            variant: 'destructive',
-            title: 'Lỗi tải tài liệu demo',
-            description: 'Không thể tải được tệp ảnh mẫu.',
-        })
-    }
+    processFileForExtraction(demoImageUrl);
   }
 
 
@@ -204,7 +202,7 @@ export default function OnlineForm({
             </DialogHeader>
             <div className="py-4 relative aspect-[_7/10_]">
                 <Image 
-                    src="/mock-birth-certificate.jpg"
+                    src={demoImageUrl}
                     alt="Mock birth certificate" 
                     fill
                     className="object-contain rounded-md"
